@@ -200,21 +200,23 @@ car_series_mapping = {
     r".*E5.*": "E 5",
     r".*E 5.*": "E 5",
     r".*世纪.*": "世纪",
-    r".*至境.*": "至境世家",
+    r".*世家.*": "至境世家",
+    r".*至境世家.*": "至境世家",
+    r".*L7.*": "至境",
     r".*昂科旗.*": "昂科威PLUS",
     r".*别克.*": "昂科威PLUS",
 }
 
 source_category_mapping = {
-    "车商汇": "垂媒", "车商汇(集客号)": "垂媒", "车商汇（IM会话）": "垂媒", "车商汇（分期）": "垂媒", "车商汇（平台活动）": "垂媒",
+    "车商汇": "垂媒", "车商汇（集客号）": "垂媒", "车商汇（IM会话）": "垂媒", "车商汇（分期）": "垂媒", "车商汇（平台活动）": "垂媒",
     "智能产品（智能展厅）": "垂媒", "抖音": "自媒", "本地通-经销商号": "自媒", "本地通异地-经销商号": "自媒",
-    "易车网": "垂媒", "汽车之家": "垂媒", "其他": "垂媒"
+    "易车网": "垂媒", "汽车之家": "垂媒", "别克私域": "主机厂下发"
 }
 
 source_detail_mapping = {
     "车商汇": "汽车之家", "车商汇(集客号)": "汽车之家", "车商汇（IM会话）": "汽车之家", "车商汇（分期）": "汽车之家", "车商汇（平台活动）": "汽车之家",
-    "智能产品（智能展厅）": "汽车之家", "抖音": "抖音", "本地通-经销商号": "抖音", "本地通异地-经销商号": "抖音",
-    "易车网": "易车", "汽车之家": "汽车之家", "其他": "垂媒"
+    "智能产品（智能展厅）": "汽车之家", "抖音": "抖音", "本地通-经销商号": "本地通-经销商号", "本地通异地-经销商号": "本地通异地-经销商号",
+    "易车网": "易车", "汽车之家": "汽车之家", "iBuick": ""
 }
 
 # 复制原脚本的处理函数
@@ -251,11 +253,11 @@ def normalize_car_series(car_series, default_value="昂科威PLUS", original_sou
 def map_source(source_value, mapping_dict, field_name="来源"):
     """映射来源字段"""
     if pd.isna(source_value):
-        return "其他"
+        return ""
     
     source_str = str(source_value).strip()
     if not source_str:
-        return "其他"
+        return ""
     
     # 尝试精确匹配
     if source_str in mapping_dict:
@@ -266,7 +268,7 @@ def map_source(source_value, mapping_dict, field_name="来源"):
         if key in source_str or source_str in key:
             return value
     
-    return "其他"
+    return ""
 
 def fair_allocate_consultants(records, selected_consultants_dict, first_consultant=None):
     """公平分配销售顾问"""
