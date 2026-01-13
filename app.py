@@ -347,8 +347,9 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
                 '销售顾问': '',
                 '单位': '',
                 '跟进内容': '',
-                '原始车系': str(original_car_series),
-                '原始来源': str(source)
+                # 注释掉原始车系和原始来源字段
+                # '原始车系': str(original_car_series),
+                # '原始来源': str(source)
             })
     
     # 处理汽车之家数据
@@ -382,8 +383,9 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
                 '销售顾问': '',
                 '单位': '',
                 '跟进内容': '',
-                '原始车系': str(original_car_series),
-                '原始来源': str(bmd_source)
+                # 注释掉原始车系和原始来源字段
+                # '原始车系': str(original_car_series),
+                # '原始来源': str(bmd_source)
             })
     
     # 合并结果
@@ -411,6 +413,15 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
     
     # 转换回DataFrame
     df = pd.DataFrame(records)
+    
+    # 确保数据列的顺序（去除不需要的列）
+    final_columns = [
+        '姓名', '手机号', '性别', '来源分类', '线索来源', '备注',
+        '意向品牌', '意向车系', '销售顾问', '单位', '跟进内容'
+    ]
+    
+    # 确保DataFrame只包含我们需要的列
+    df = df[final_columns]
     
     return df
 
@@ -526,9 +537,21 @@ with tab2:
                             
                             # 显示分配统计
                             st.subheader("销售顾问分配统计")
+                            allocation_counts = {}
                             for consultant in selected_consultants:
                                 count = len(df_result[df_result['销售顾问'] == consultant])
+                                allocation_counts[consultant] = count
                                 st.write(f"**{consultant}**: {count}条")
+                            
+                            # 检查分配均匀度
+                            counts = list(allocation_counts.values())
+                            if counts:
+                                max_count = max(counts)
+                                min_count = min(counts)
+                                if max_count - min_count > 1:
+                                    st.warning(f"⚠️ 分配不均匀，最大差值 {max_count - min_count}")
+                                else:
+                                    st.success(f"✓ 分配均匀，最大差值 {max_count - min_count}")
                     else:
                         st.error("没有可处理的数据文件")
                         
@@ -564,8 +587,13 @@ with tab3:
             source_stats = df['线索来源'].value_counts()
             st.metric("来源渠道", len(source_stats))
             
+            # 显示车系统计详情
+            with st.expander("查看车系统计详情"):
+                for car, count in car_stats.items():
+                    st.write(f"{car}: {count}条")
+            
         with col2:
-            st.subheader("🔍 车系统计")
+            st.subheader("🔍 车系统计图表")
             if not df['意向车系'].empty:
                 car_stats = df['意向车系'].value_counts()
                 st.bar_chart(car_stats)
@@ -573,9 +601,23 @@ with tab3:
             # 显示前5大车型
             st.subheader("🏆 前5大车型")
             top5 = car_stats.head(5)
-            for car, count in top5.items():
+            for i, (car, count) in enumerate(top5.items(), 1):
                 percentage = (count / len(df)) * 100
-                st.write(f"{car}: {count}条 ({percentage:.1f}%)")
+                st.write(f"{i}. {car}: {count}条 ({percentage:.1f}%)")
+        
+        # 显示线索来源统计
+        st.subheader("📈 线索来源统计")
+        col3, col4 = st.columns(2)
+        
+        with col3:
+            if not df['线索来源'].empty:
+                source_stats = df['线索来源'].value_counts()
+                st.bar_chart(source_stats)
+        
+        with col4:
+            with st.expander("查看来源统计详情"):
+                for source, count in source_stats.items():
+                    st.write(f"{source}: {count}条")
         
         # 提供下载
         st.subheader("💾 下载结果")
@@ -595,7 +637,7 @@ with tab3:
         )
         
         # 提供CSV格式下载
-        csv_output = df.to_csv(index=False).encode('utf-8-sig')
+        csv_output = df.to_csv(index=False, encoding='utf-8-sig')
         st.download_button(
             label="📄 下载CSV文件",
             data=csv_output,
