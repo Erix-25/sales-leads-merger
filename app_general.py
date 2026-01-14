@@ -78,7 +78,10 @@ if 'source_category_mapping' not in st.session_state:
         {"原始来源": "本地通异地-经销商号", "目标分类": "自媒", "是否启用": True},
         {"原始来源": "易车网", "目标分类": "垂媒", "是否启用": True},
         {"原始来源": "汽车之家", "目标分类": "垂媒", "是否启用": True},
-        {"原始来源": "别克私域", "目标分类": "主机厂下发", "是否启用": True}
+        {"原始来源": "别克私域", "目标分类": "主机厂下发", "是否启用": True},
+        # 新添加的规则
+        {"原始来源": "总部矩阵号", "目标分类": "自媒", "是否启用": True},
+        {"原始来源": "经销商市场活动", "目标分类": "排除", "是否启用": True},  # 特殊标记，用于排除
     ]
 
 if 'source_detail_mapping' not in st.session_state:
@@ -94,7 +97,10 @@ if 'source_detail_mapping' not in st.session_state:
         {"原始来源": "本地通异地-经销商号", "目标线索来源": "本地通异地-经销商号", "是否启用": True},
         {"原始来源": "易车网", "目标线索来源": "易车", "是否启用": True},
         {"原始来源": "汽车之家", "目标线索来源": "汽车之家", "是否启用": True},
-        {"原始来源": "iBuick", "目标线索来源": "", "是否启用": True}
+        {"原始来源": "iBuick", "目标线索来源": "", "是否启用": True},
+        # 新添加的规则
+        {"原始来源": "总部矩阵号", "目标线索来源": "抖音", "是否启用": True},
+        {"原始来源": "经销商市场活动", "目标线索来源": "排除", "是否启用": True},  # 特殊标记，用于排除
     ]
 
 def add_log(message):
@@ -253,7 +259,8 @@ with st.sidebar.expander("🗺️ 映射规则管理", expanded=False):
                     {"原始模式": r".*E5.*", "目标车系": "E 5", "是否启用": True},
                     {"原始模式": r".*E 5.*", "目标车系": "E 5", "是否启用": True},
                     {"原始模式": r".*世纪.*", "目标车系": "世纪", "是否启用": True},
-                    {"原始模式": r".*至境.*", "目标车系": "至境世家", "是否启用": True},
+                    {"原始模式": r".*世家.*", "目标车系": "至境世家", "是否启用": True},
+                    {"原始模式": r".*L7.*", "目标车系": "至境", "是否启用": True},
                     {"原始模式": r".*昂科旗.*", "目标车系": "昂科威PLUS", "是否启用": True},
                     {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True}
                 ]
@@ -261,12 +268,17 @@ with st.sidebar.expander("🗺️ 映射规则管理", expanded=False):
     
     with tab2:
         st.write("来源分类映射规则：")
+        st.markdown("""
+        **特殊规则说明：**
+        - 为`经销商市场活动`设置目标分类为`排除`时，系统会自动剔除该来源的线索
+        - 为`总部矩阵号`设置目标分类为`自媒`
+        """)
         category_mapping_df = pd.DataFrame(st.session_state.source_category_mapping)
         edited_category_df = st.data_editor(
             category_mapping_df,
             column_config={
                 "原始来源": st.column_config.TextColumn("原始来源", width="large", required=True),
-                "目标分类": st.column_config.TextColumn("目标分类", width="medium", required=True),
+                "目标分类": st.column_config.TextColumn("目标分类", width="medium", required=True, help="设置为'排除'会剔除该来源的线索"),
                 "是否启用": st.column_config.CheckboxColumn("是否启用", default=True)
             },
             num_rows="dynamic",
@@ -291,20 +303,30 @@ with st.sidebar.expander("🗺️ 映射规则管理", expanded=False):
                     {"原始来源": "抖音", "目标分类": "自媒", "是否启用": True},
                     {"原始来源": "本地通-经销商号", "目标分类": "自媒", "是否启用": True},
                     {"原始来源": "本地通异地-经销商号", "目标分类": "自媒", "是否启用": True},
+                    {"原始来源": "本地通", "目标分类": "自媒", "是否启用": True},
                     {"原始来源": "易车网", "目标分类": "垂媒", "是否启用": True},
                     {"原始来源": "汽车之家", "目标分类": "垂媒", "是否启用": True},
-                    {"原始来源": "别克私域", "目标分类": "主机厂下发", "是否启用": True}
+                    {"原始来源": "别克私域", "目标分类": "主机厂下发", "是否启用": True},
+                    {"原始来源": "iBuick", "目标分类": "主机厂下发", "是否启用": True},
+                    # 新添加的规则
+                    {"原始来源": "总部矩阵号", "目标分类": "自媒", "是否启用": True},
+                    {"原始来源": "经销商市场活动", "目标分类": "排除", "是否启用": True},
                 ]
                 st.success("已恢复默认来源分类映射规则！")
     
     with tab3:
         st.write("线索来源映射规则：")
+        st.markdown("""
+        **特殊规则说明：**
+        - 为`经销商市场活动`设置目标线索来源为`排除`时，系统会自动剔除该来源的线索
+        - 为`总部矩阵号`设置目标线索来源为`抖音`
+        """)
         detail_mapping_df = pd.DataFrame(st.session_state.source_detail_mapping)
         edited_detail_df = st.data_editor(
             detail_mapping_df,
             column_config={
                 "原始来源": st.column_config.TextColumn("原始来源", width="large", required=True),
-                "目标线索来源": st.column_config.TextColumn("目标线索来源", width="medium", required=True),
+                "目标线索来源": st.column_config.TextColumn("目标线索来源", width="medium", required=True, help="设置为'排除'会剔除该来源的线索"),
                 "是否启用": st.column_config.CheckboxColumn("是否启用", default=True)
             },
             num_rows="dynamic",
@@ -327,11 +349,16 @@ with st.sidebar.expander("🗺️ 映射规则管理", expanded=False):
                     {"原始来源": "车商汇（平台活动）", "目标线索来源": "汽车之家", "是否启用": True},
                     {"原始来源": "智能产品（智能展厅）", "目标线索来源": "汽车之家", "是否启用": True},
                     {"原始来源": "抖音", "目标线索来源": "抖音", "是否启用": True},
-                    {"原始来源": "本地通-经销商号", "目标线索来源": "本地通-经销商号", "是否启用": True},
-                    {"原始来源": "本地通异地-经销商号", "目标线索来源": "本地通异地-经销商号", "是否启用": True},
+                    {"原始来源": "本地通-经销商号", "目标线索来源": "抖音", "是否启用": True},
+                    {"原始来源": "本地通异地-经销商号", "目标线索来源": "抖音", "是否启用": True},
+                    {"原始来源": "本地", "目标线索来源": "抖音", "是否启用": True},
                     {"原始来源": "易车网", "目标线索来源": "易车", "是否启用": True},
                     {"原始来源": "汽车之家", "目标线索来源": "汽车之家", "是否启用": True},
-                    {"原始来源": "iBuick", "目标线索来源": "", "是否启用": True}
+                    {"原始来源": "别克私域", "目标分类": "", "是否启用": True},
+                    {"原始来源": "iBuick", "目标线索来源": "", "是否启用": True},
+                    # 新添加的规则
+                    {"原始来源": "总部矩阵号", "目标线索来源": "抖音", "是否启用": True},
+                    {"原始来源": "经销商市场活动", "目标线索来源": "排除", "是否启用": True},
                 ]
                 st.success("已恢复默认线索来源映射规则！")
     
@@ -507,7 +534,11 @@ def map_source_category(source_value):
             original_source = mapping_rule["原始来源"]
             # 精确匹配或模糊匹配
             if original_source == source_str or original_source in source_str or source_str in original_source:
-                return mapping_rule["目标分类"]
+                target = mapping_rule["目标分类"]
+                # 如果目标分类为"排除"，返回特殊标记
+                if target == "排除":
+                    return "排除"
+                return target
     
     return "其他"
 
@@ -526,7 +557,11 @@ def map_source_detail(source_value):
             original_source = mapping_rule["原始来源"]
             # 精确匹配或模糊匹配
             if original_source == source_str or original_source in source_str or source_str in original_source:
-                return mapping_rule["目标线索来源"]
+                target = mapping_rule["目标线索来源"]
+                # 如果目标线索来源为"排除"，返回特殊标记
+                if target == "排除":
+                    return "排除"
+                return target
     
     return ""
 
@@ -572,8 +607,9 @@ def fair_allocate_consultants(records, selected_consultants_dict, first_consulta
     return records
 
 def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consultant):
-    """处理合并逻辑"""
+    """处理合并逻辑 - 新增排除规则"""
     results = []
+    excluded_count = 0
     
     # 处理易车网数据
     if df_yiche is not None:
@@ -596,6 +632,11 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             
             source_category = map_source_category(source)
             source_detail = map_source_detail(source)
+            
+            # 检查是否需要排除（来源分类或线索来源为"排除"）
+            if source_category == "排除" or source_detail == "排除":
+                excluded_count += 1
+                continue
             
             results.append({
                 '姓名': name,
@@ -630,6 +671,11 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             source_category = map_source_category(bmd_source)
             source_detail = map_source_detail(bmd_source)
             
+            # 检查是否需要排除（来源分类或线索来源为"排除"）
+            if source_category == "排除" or source_detail == "排除":
+                excluded_count += 1
+                continue
+            
             results.append({
                 '姓名': name,
                 '手机号': phone,
@@ -645,6 +691,9 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             })
     
     # 合并结果
+    if excluded_count > 0:
+        add_log(f"排除了 {excluded_count} 条'经销商市场活动'线索")
+    
     if not results:
         st.error("没有找到有效数据")
         return None
@@ -941,4 +990,4 @@ with tab3:
 
 # 页脚
 st.markdown("---")
-st.caption("销售线索合并工具 v0.3| 支持自定义映射规则 | 技术支持")
+st.caption("销售线索合并工具 v0.4 | 支持自定义映射规则和排除规则 | 技术支持")
