@@ -40,6 +40,63 @@ if 'consultant_settings' not in st.session_state:
         {"姓名": "陈杰", "单位": "安吉名流销售部", "是否启用": False}
     ]
 
+# 初始化映射规则
+if 'car_series_mapping' not in st.session_state:
+    st.session_state.car_series_mapping = [
+        {"原始模式": r".*GL8.*陆尊.*", "目标车系": "GL8 豪华商务车", "是否启用": True},
+        {"原始模式": r".*GL8.*陆上公务舱.*", "目标车系": "GL8 陆上公务舱", "是否启用": True},
+        {"原始模式": r".*GL8.*陆尚.*", "目标车系": "GL8陆尚", "是否启用": True},
+        {"原始模式": r".*GL8.*Avenir.*", "目标车系": "GL8 Avenir", "是否启用": True},
+        {"原始模式": r".*GL8.*豪华商务车.*", "目标车系": "GL8 豪华商务车", "是否启用": True},
+        {"原始模式": r".*君越.*", "目标车系": "全新一代君越", "是否启用": True},
+        {"原始模式": r".*君威.*", "目标车系": "全新一代君威", "是否启用": True},
+        {"原始模式": r".*新君威.*", "目标车系": "全新一代君威", "是否启用": True},
+        {"原始模式": r".*昂科威Plus.*", "目标车系": "昂科威PLUS", "是否启用": True},
+        {"原始模式": r".*昂科威PLUS.*", "目标车系": "昂科威PLUS", "是否启用": True},
+        {"原始模式": r".*昂科威S.*", "目标车系": "昂科威S", "是否启用": True},
+        {"原始模式": r".*威朗.*", "目标车系": "威朗Pro", "是否启用": True},
+        {"原始模式": r".*微蓝6.*", "目标车系": "VELITE 6", "是否启用": True},
+        {"原始模式": r".*VELITE 6.*", "目标车系": "VELITE 6", "是否启用": True},
+        {"原始模式": r".*E5.*", "目标车系": "E 5", "是否启用": True},
+        {"原始模式": r".*E 5.*", "目标车系": "E 5", "是否启用": True},
+        {"原始模式": r".*世纪.*", "目标车系": "世纪", "是否启用": True},
+        {"原始模式": r".*至境.*", "目标车系": "至境世家", "是否启用": True},
+        {"原始模式": r".*昂科旗.*", "目标车系": "昂科威PLUS", "是否启用": True},
+        {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True}
+    ]
+
+if 'source_category_mapping' not in st.session_state:
+    st.session_state.source_category_mapping = [
+        {"原始来源": "车商汇", "目标分类": "垂媒", "是否启用": True},
+        {"原始来源": "车商汇（集客号）", "目标分类": "垂媒", "是否启用": True},
+        {"原始来源": "车商汇（IM会话）", "目标分类": "垂媒", "是否启用": True},
+        {"原始来源": "车商汇（分期）", "目标分类": "垂媒", "是否启用": True},
+        {"原始来源": "车商汇（平台活动）", "目标分类": "垂媒", "是否启用": True},
+        {"原始来源": "智能产品（智能展厅）", "目标分类": "垂媒", "是否启用": True},
+        {"原始来源": "抖音", "目标分类": "自媒", "是否启用": True},
+        {"原始来源": "本地通-经销商号", "目标分类": "自媒", "是否启用": True},
+        {"原始来源": "本地通异地-经销商号", "目标分类": "自媒", "是否启用": True},
+        {"原始来源": "易车网", "目标分类": "垂媒", "是否启用": True},
+        {"原始来源": "汽车之家", "目标分类": "垂媒", "是否启用": True},
+        {"原始来源": "别克私域", "目标分类": "主机厂下发", "是否启用": True}
+    ]
+
+if 'source_detail_mapping' not in st.session_state:
+    st.session_state.source_detail_mapping = [
+        {"原始来源": "车商汇", "目标线索来源": "汽车之家", "是否启用": True},
+        {"原始来源": "车商汇(集客号)", "目标线索来源": "汽车之家", "是否启用": True},
+        {"原始来源": "车商汇（IM会话）", "目标线索来源": "汽车之家", "是否启用": True},
+        {"原始来源": "车商汇（分期）", "目标线索来源": "汽车之家", "是否启用": True},
+        {"原始来源": "车商汇（平台活动）", "目标线索来源": "汽车之家", "是否启用": True},
+        {"原始来源": "智能产品（智能展厅）", "目标线索来源": "汽车之家", "是否启用": True},
+        {"原始来源": "抖音", "目标线索来源": "抖音", "是否启用": True},
+        {"原始来源": "本地通-经销商号", "目标线索来源": "本地通-经销商号", "是否启用": True},
+        {"原始来源": "本地通异地-经销商号", "目标线索来源": "本地通异地-经销商号", "是否启用": True},
+        {"原始来源": "易车网", "目标线索来源": "易车", "是否启用": True},
+        {"原始来源": "汽车之家", "目标线索来源": "汽车之家", "是否启用": True},
+        {"原始来源": "iBuick", "目标线索来源": "", "是否启用": True}
+    ]
+
 def add_log(message):
     """添加处理日志"""
     st.session_state.processing_log.append(f"{datetime.now().strftime('%H:%M:%S')} - {message}")
@@ -47,7 +104,7 @@ def add_log(message):
 # 侧边栏配置
 st.sidebar.header("⚙️ 配置选项")
 
-# 1. 文件格式修复部分（原"改文件格式.ipynb"的功能）
+# 1. 文件格式修复部分
 st.sidebar.subheader("1. 文件格式修复")
 uploaded_file = st.sidebar.file_uploader(
     "上传汽车之家CSV文件",
@@ -152,7 +209,170 @@ if uploaded_file is not None:
         except Exception as e:
             st.sidebar.error(f"修复失败: {str(e)}")
 
-# 2. 销售人员管理
+# 2. 映射规则管理
+with st.sidebar.expander("🗺️ 映射规则管理", expanded=False):
+    tab1, tab2, tab3 = st.tabs(["🚗 车系映射", "📊 来源分类", "🔍 线索来源"])
+    
+    with tab1:
+        st.write("车系名称映射规则：")
+        car_mapping_df = pd.DataFrame(st.session_state.car_series_mapping)
+        edited_car_df = st.data_editor(
+            car_mapping_df,
+            column_config={
+                "原始模式": st.column_config.TextColumn("原始模式(支持正则)", width="large", required=True, help="使用正则表达式匹配原始车系名称"),
+                "目标车系": st.column_config.TextColumn("目标车系", width="medium", required=True),
+                "是否启用": st.column_config.CheckboxColumn("是否启用", default=True)
+            },
+            num_rows="dynamic",
+            key="car_mapping_editor"
+        )
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("💾 保存车系规则", use_container_width=True, key="save_car_mapping"):
+                st.session_state.car_series_mapping = edited_car_df.to_dict('records')
+                st.success("车系映射规则已更新！")
+        
+        with col2:
+            if st.button("🔄 恢复默认", use_container_width=True, key="reset_car_mapping"):
+                st.session_state.car_series_mapping = [
+                    {"原始模式": r".*GL8.*陆尊.*", "目标车系": "GL8 豪华商务车", "是否启用": True},
+                    {"原始模式": r".*GL8.*陆上公务舱.*", "目标车系": "GL8 陆上公务舱", "是否启用": True},
+                    {"原始模式": r".*GL8.*陆尚.*", "目标车系": "GL8陆尚", "是否启用": True},
+                    {"原始模式": r".*GL8.*Avenir.*", "目标车系": "GL8 Avenir", "是否启用": True},
+                    {"原始模式": r".*GL8.*豪华商务车.*", "目标车系": "GL8 豪华商务车", "是否启用": True},
+                    {"原始模式": r".*君越.*", "目标车系": "全新一代君越", "是否启用": True},
+                    {"原始模式": r".*君威.*", "目标车系": "全新一代君威", "是否启用": True},
+                    {"原始模式": r".*新君威.*", "目标车系": "全新一代君威", "是否启用": True},
+                    {"原始模式": r".*昂科威Plus.*", "目标车系": "昂科威PLUS", "是否启用": True},
+                    {"原始模式": r".*昂科威PLUS.*", "目标车系": "昂科威PLUS", "是否启用": True},
+                    {"原始模式": r".*昂科威S.*", "目标车系": "昂科威S", "是否启用": True},
+                    {"原始模式": r".*威朗.*", "目标车系": "威朗Pro", "是否启用": True},
+                    {"原始模式": r".*微蓝6.*", "目标车系": "VELITE 6", "是否启用": True},
+                    {"原始模式": r".*VELITE 6.*", "目标车系": "VELITE 6", "是否启用": True},
+                    {"原始模式": r".*E5.*", "目标车系": "E 5", "是否启用": True},
+                    {"原始模式": r".*E 5.*", "目标车系": "E 5", "是否启用": True},
+                    {"原始模式": r".*世纪.*", "目标车系": "世纪", "是否启用": True},
+                    {"原始模式": r".*至境.*", "目标车系": "至境世家", "是否启用": True},
+                    {"原始模式": r".*昂科旗.*", "目标车系": "昂科威PLUS", "是否启用": True},
+                    {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True}
+                ]
+                st.success("已恢复默认车系映射规则！")
+    
+    with tab2:
+        st.write("来源分类映射规则：")
+        category_mapping_df = pd.DataFrame(st.session_state.source_category_mapping)
+        edited_category_df = st.data_editor(
+            category_mapping_df,
+            column_config={
+                "原始来源": st.column_config.TextColumn("原始来源", width="large", required=True),
+                "目标分类": st.column_config.TextColumn("目标分类", width="medium", required=True),
+                "是否启用": st.column_config.CheckboxColumn("是否启用", default=True)
+            },
+            num_rows="dynamic",
+            key="category_mapping_editor"
+        )
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("💾 保存分类规则", use_container_width=True, key="save_category_mapping"):
+                st.session_state.source_category_mapping = edited_category_df.to_dict('records')
+                st.success("来源分类映射规则已更新！")
+        
+        with col2:
+            if st.button("🔄 恢复默认", use_container_width=True, key="reset_category_mapping"):
+                st.session_state.source_category_mapping = [
+                    {"原始来源": "车商汇", "目标分类": "垂媒", "是否启用": True},
+                    {"原始来源": "车商汇（集客号）", "目标分类": "垂媒", "是否启用": True},
+                    {"原始来源": "车商汇（IM会话）", "目标分类": "垂媒", "是否启用": True},
+                    {"原始来源": "车商汇（分期）", "目标分类": "垂媒", "是否启用": True},
+                    {"原始来源": "车商汇（平台活动）", "目标分类": "垂媒", "是否启用": True},
+                    {"原始来源": "智能产品（智能展厅）", "目标分类": "垂媒", "是否启用": True},
+                    {"原始来源": "抖音", "目标分类": "自媒", "是否启用": True},
+                    {"原始来源": "本地通-经销商号", "目标分类": "自媒", "是否启用": True},
+                    {"原始来源": "本地通异地-经销商号", "目标分类": "自媒", "是否启用": True},
+                    {"原始来源": "易车网", "目标分类": "垂媒", "是否启用": True},
+                    {"原始来源": "汽车之家", "目标分类": "垂媒", "是否启用": True},
+                    {"原始来源": "别克私域", "目标分类": "主机厂下发", "是否启用": True}
+                ]
+                st.success("已恢复默认来源分类映射规则！")
+    
+    with tab3:
+        st.write("线索来源映射规则：")
+        detail_mapping_df = pd.DataFrame(st.session_state.source_detail_mapping)
+        edited_detail_df = st.data_editor(
+            detail_mapping_df,
+            column_config={
+                "原始来源": st.column_config.TextColumn("原始来源", width="large", required=True),
+                "目标线索来源": st.column_config.TextColumn("目标线索来源", width="medium", required=True),
+                "是否启用": st.column_config.CheckboxColumn("是否启用", default=True)
+            },
+            num_rows="dynamic",
+            key="detail_mapping_editor"
+        )
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("💾 保存线索规则", use_container_width=True, key="save_detail_mapping"):
+                st.session_state.source_detail_mapping = edited_detail_df.to_dict('records')
+                st.success("线索来源映射规则已更新！")
+        
+        with col2:
+            if st.button("🔄 恢复默认", use_container_width=True, key="reset_detail_mapping"):
+                st.session_state.source_detail_mapping = [
+                    {"原始来源": "车商汇", "目标线索来源": "汽车之家", "是否启用": True},
+                    {"原始来源": "车商汇(集客号)", "目标线索来源": "汽车之家", "是否启用": True},
+                    {"原始来源": "车商汇（IM会话）", "目标线索来源": "汽车之家", "是否启用": True},
+                    {"原始来源": "车商汇（分期）", "目标线索来源": "汽车之家", "是否启用": True},
+                    {"原始来源": "车商汇（平台活动）", "目标线索来源": "汽车之家", "是否启用": True},
+                    {"原始来源": "智能产品（智能展厅）", "目标线索来源": "汽车之家", "是否启用": True},
+                    {"原始来源": "抖音", "目标线索来源": "抖音", "是否启用": True},
+                    {"原始来源": "本地通-经销商号", "目标线索来源": "本地通-经销商号", "是否启用": True},
+                    {"原始来源": "本地通异地-经销商号", "目标线索来源": "本地通异地-经销商号", "是否启用": True},
+                    {"原始来源": "易车网", "目标线索来源": "易车", "是否启用": True},
+                    {"原始来源": "汽车之家", "目标线索来源": "汽车之家", "是否启用": True},
+                    {"原始来源": "iBuick", "目标线索来源": "", "是否启用": True}
+                ]
+                st.success("已恢复默认线索来源映射规则！")
+    
+    # 导入/导出功能
+    st.write("---")
+    st.write("导入/导出映射规则：")
+    
+    col3, col4 = st.columns(2)
+    with col3:
+        # 导出所有映射规则
+        all_mappings = {
+            "car_series_mapping": st.session_state.car_series_mapping,
+            "source_category_mapping": st.session_state.source_category_mapping,
+            "source_detail_mapping": st.session_state.source_detail_mapping
+        }
+        settings_json = json.dumps(all_mappings, ensure_ascii=False, indent=2)
+        st.download_button(
+            label="📥 导出所有规则",
+            data=settings_json,
+            file_name="映射规则配置.json",
+            mime="application/json",
+            use_container_width=True
+        )
+    
+    with col4:
+        # 导入映射规则
+        uploaded_mappings = st.file_uploader("导入规则文件", type=['json'], key="mappings_upload", label_visibility="collapsed")
+        if uploaded_mappings:
+            try:
+                new_mappings = json.load(uploaded_mappings)
+                if "car_series_mapping" in new_mappings:
+                    st.session_state.car_series_mapping = new_mappings["car_series_mapping"]
+                if "source_category_mapping" in new_mappings:
+                    st.session_state.source_category_mapping = new_mappings["source_category_mapping"]
+                if "source_detail_mapping" in new_mappings:
+                    st.session_state.source_detail_mapping = new_mappings["source_detail_mapping"]
+                st.success("映射规则导入成功！")
+            except Exception as e:
+                st.error(f"导入失败: {str(e)}")
+
+# 3. 销售人员管理
 with st.sidebar.expander("👥 销售人员管理", expanded=False):
     st.write("修改销售人员名单和对应单位：")
     
@@ -173,13 +393,13 @@ with st.sidebar.expander("👥 销售人员管理", expanded=False):
     # 保存修改按钮
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("💾 保存修改", use_container_width=True):
+        if st.button("💾 保存修改", use_container_width=True, key="save_consultants"):
             # 更新销售人员名单
             st.session_state.consultant_settings = edited_df.to_dict('records')
             st.success("销售人员名单已更新！")
     
     with col2:
-        if st.button("🔄 恢复默认", use_container_width=True):
+        if st.button("🔄 恢复默认", use_container_width=True, key="reset_consultants"):
             # 恢复默认设置
             st.session_state.consultant_settings = [
                 {"姓名": "陈婷", "单位": "上海安吉名流汽车服务有限公司", "是否启用": True},
@@ -190,35 +410,8 @@ with st.sidebar.expander("👥 销售人员管理", expanded=False):
                 {"姓名": "陈杰", "单位": "安吉名流销售部", "是否启用": False}
             ]
             st.success("已恢复默认设置！")
-    
-    # 导入/导出功能
-    st.write("---")
-    st.write("导入/导出设置：")
-    
-    col3, col4 = st.columns(2)
-    with col3:
-        # 导出设置
-        settings_json = json.dumps(st.session_state.consultant_settings, ensure_ascii=False, indent=2)
-        st.download_button(
-            label="📥 导出设置",
-            data=settings_json,
-            file_name="销售人员设置.json",
-            mime="application/json",
-            use_container_width=True
-        )
-    
-    with col4:
-        # 导入设置
-        uploaded_settings = st.file_uploader("导入设置文件", type=['json'], key="settings_upload", label_visibility="collapsed")
-        if uploaded_settings:
-            try:
-                new_settings = json.load(uploaded_settings)
-                st.session_state.consultant_settings = new_settings
-                st.success("设置导入成功！")
-            except Exception as e:
-                st.error(f"导入失败: {str(e)}")
 
-# 3. 销售线索合并配置
+# 4. 销售线索合并配置
 st.sidebar.subheader("2. 合并配置")
 
 # 文件上传部分
@@ -260,42 +453,6 @@ else:
     st.sidebar.warning("请至少选择一个销售顾问")
     first_consultant = ""
 
-# 车系名称映射规则（从原脚本复制）
-car_series_mapping = {
-    r".*GL8.*陆尊.*": "GL8 豪华商务车",
-    r".*GL8.*陆上公务舱.*": "GL8 陆上公务舱",
-    r".*GL8.*陆尚.*": "GL8陆尚",
-    r".*GL8.*Avenir.*": "GL8 Avenir",
-    r".*GL8.*豪华商务车.*": "GL8 豪华商务车",
-    r".*君越.*": "全新一代君越",
-    r".*君威.*": "全新一代君威",
-    r".*新君威.*": "全新一代君威",
-    r".*昂科威Plus.*": "昂科威PLUS",
-    r".*昂科威PLUS.*": "昂科威PLUS",
-    r".*昂科威S.*": "昂科威S",
-    r".*威朗.*": "威朗Pro",
-    r".*微蓝6.*": "VELITE 6",
-    r".*VELITE 6.*": "VELITE 6",
-    r".*E5.*": "E 5",
-    r".*E 5.*": "E 5",
-    r".*世纪.*": "世纪",
-    r".*至境.*": "至境世家",
-    r".*昂科旗.*": "昂科威PLUS",
-    r".*别克.*": "昂科威PLUS",
-}
-
-source_category_mapping = {
-    "车商汇": "垂媒", "车商汇（集客号）": "垂媒", "车商汇（IM会话）": "垂媒", "车商汇（分期）": "垂媒", "车商汇（平台活动）": "垂媒",
-    "智能产品（智能展厅）": "垂媒", "抖音": "自媒", "本地通-经销商号": "自媒", "本地通异地-经销商号": "自媒",
-    "易车网": "垂媒", "汽车之家": "垂媒", "别克私域": "主机厂下发"
-}
-
-source_detail_mapping = {
-    "车商汇": "汽车之家", "车商汇(集客号)": "汽车之家", "车商汇（IM会话）": "汽车之家", "车商汇（分期）": "汽车之家", "车商汇（平台活动）": "汽车之家",
-    "智能产品（智能展厅）": "汽车之家", "抖音": "抖音", "本地通-经销商号": "本地通-经销商号", "本地通异地-经销商号": "本地通异地-经销商号",
-    "易车网": "易车", "汽车之家": "汽车之家", "iBuick": ""
-}
-
 # 复制原脚本的处理函数
 def remove_after_slash(value):
     """去除字符串中'/'之后的内容"""
@@ -315,20 +472,28 @@ def get_consultant_unit(consultant_name):
     return ""
 
 def normalize_car_series(car_series, default_value="昂科威PLUS", original_source=None):
-    """标准化车系名称"""
+    """标准化车系名称 - 使用可配置的映射规则"""
     if pd.isna(car_series) or str(car_series).strip() == '':
         return default_value
     
     original = str(car_series).strip()
     
-    for pattern, replacement in car_series_mapping.items():
-        if re.search(pattern, original, re.IGNORECASE):
-            return replacement
+    # 使用可配置的映射规则
+    for mapping_rule in st.session_state.car_series_mapping:
+        if mapping_rule["是否启用"]:
+            pattern = mapping_rule["原始模式"]
+            try:
+                if re.search(pattern, original, re.IGNORECASE):
+                    return mapping_rule["目标车系"]
+            except re.error:
+                # 如果正则表达式无效，尝试字符串包含匹配
+                if pattern in original or original in pattern:
+                    return mapping_rule["目标车系"]
     
     return default_value
 
-def map_source(source_value, mapping_dict, field_name="来源"):
-    """映射来源字段"""
+def map_source_category(source_value):
+    """映射来源分类 - 使用可配置的映射规则"""
     if pd.isna(source_value):
         return "其他"
     
@@ -336,16 +501,34 @@ def map_source(source_value, mapping_dict, field_name="来源"):
     if not source_str:
         return "其他"
     
-    # 尝试精确匹配
-    if source_str in mapping_dict:
-        return mapping_dict[source_str]
-    
-    # 尝试模糊匹配
-    for key, value in mapping_dict.items():
-        if key in source_str or source_str in key:
-            return value
+    # 使用可配置的映射规则
+    for mapping_rule in st.session_state.source_category_mapping:
+        if mapping_rule["是否启用"]:
+            original_source = mapping_rule["原始来源"]
+            # 精确匹配或模糊匹配
+            if original_source == source_str or original_source in source_str or source_str in original_source:
+                return mapping_rule["目标分类"]
     
     return "其他"
+
+def map_source_detail(source_value):
+    """映射线索来源 - 使用可配置的映射规则"""
+    if pd.isna(source_value):
+        return ""
+    
+    source_str = str(source_value).strip()
+    if not source_str:
+        return ""
+    
+    # 使用可配置的映射规则
+    for mapping_rule in st.session_state.source_detail_mapping:
+        if mapping_rule["是否启用"]:
+            original_source = mapping_rule["原始来源"]
+            # 精确匹配或模糊匹配
+            if original_source == source_str or original_source in source_str or source_str in original_source:
+                return mapping_rule["目标线索来源"]
+    
+    return ""
 
 def fair_allocate_consultants(records, selected_consultants_dict, first_consultant=None):
     """公平分配销售顾问"""
@@ -411,8 +594,8 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             if pd.isna(source):
                 source = row.get('来源', '')
             
-            source_category = map_source(source, source_category_mapping, "来源分类")
-            source_detail = map_source(source, source_detail_mapping, "线索来源")
+            source_category = map_source_category(source)
+            source_detail = map_source_detail(source)
             
             results.append({
                 '姓名': name,
@@ -444,8 +627,8 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             
             # 来源信息
             bmd_source = row.get('BMD二级渠道', '')
-            source_category = map_source(bmd_source, source_category_mapping, "来源分类")
-            source_detail = map_source(bmd_source, source_detail_mapping, "线索来源")
+            source_category = map_source_category(bmd_source)
+            source_detail = map_source_detail(bmd_source)
             
             results.append({
                 '姓名': name,
@@ -565,10 +748,24 @@ with tab1:
 with tab2:
     st.header("数据处理")
     
-    # 显示当前销售人员名单
-    with st.expander("查看当前销售人员名单", expanded=False):
-        consultants_df = pd.DataFrame(st.session_state.consultant_settings)
-        st.dataframe(consultants_df, use_container_width=True)
+    # 显示当前映射规则统计
+    with st.expander("查看当前映射规则统计", expanded=False):
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            enabled_car = sum(1 for rule in st.session_state.car_series_mapping if rule["是否启用"])
+            total_car = len(st.session_state.car_series_mapping)
+            st.metric("车系映射规则", f"{enabled_car}/{total_car} 条启用")
+        
+        with col2:
+            enabled_category = sum(1 for rule in st.session_state.source_category_mapping if rule["是否启用"])
+            total_category = len(st.session_state.source_category_mapping)
+            st.metric("来源分类规则", f"{enabled_category}/{total_category} 条启用")
+        
+        with col3:
+            enabled_detail = sum(1 for rule in st.session_state.source_detail_mapping if rule["是否启用"])
+            total_detail = len(st.session_state.source_detail_mapping)
+            st.metric("线索来源规则", f"{enabled_detail}/{total_detail} 条启用")
     
     # 检查是否有选中的销售顾问
     if not selected_consultants:
@@ -744,5 +941,4 @@ with tab3:
 
 # 页脚
 st.markdown("---")
-
-st.caption("销售线索合并工具 v1.0 | 技术支持")
+st.caption("销售线索合并工具 v0.3| 支持自定义映射规则 | 技术支持")
