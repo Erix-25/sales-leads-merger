@@ -64,6 +64,7 @@ if 'car_series_mapping' not in st.session_state:
         {"原始模式": r".*L7.*", "目标车系": "至境L7", "是否启用": True},
         {"原始模式": r".*昂科旗.*", "目标车系": "昂科威PLUS", "是否启用": True},
         {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True}
+        {"原始模式": r".*E7.*", "目标车系": "至境E7", "是否启用": True},
     ]
 
 if 'source_category_mapping' not in st.session_state:
@@ -282,6 +283,7 @@ with st.sidebar.expander("🗺️ 映射规则管理", expanded=False):
                     {"原始模式": r".*L7.*", "目标车系": "至境L7", "是否启用": True},
                     {"原始模式": r".*昂科旗.*", "目标车系": "昂科威PLUS", "是否启用": True},
                     {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True}
+                    {"原始模式": r".*E7.*", "目标车系": "至境E7", "是否启用": True},
                 ]
                 st.success("已恢复默认车系映射规则！")
     
@@ -1019,4 +1021,4 @@ with tab3:
 
 # 页脚
 st.markdown("---")
-st.caption("销售线索合并工具 v0.5.5 | 支持自定义映射规则和排除规则 | All by Eric & deepseek")
+st.caption("销售线索合并工具 v0.5.6 | 支持自定义映射规则和排除规则 | All by Eric & deepseek")
