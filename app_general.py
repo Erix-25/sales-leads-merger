@@ -481,6 +481,17 @@ with col1:
 with col2:
     autohome_file = st.file_uploader("汽车之家文件", type=['csv'], key="autohome_file")
 
+# ====== 新增：汽车之家来源处理选项 ======
+st.sidebar.subheader("汽车之家来源处理")
+autohome_source_option = st.sidebar.radio(
+    "选择处理方式",
+    options=["使用映射规则（需有'BMD二级渠道'列）", "强制设为垂媒/汽车之家（忽略原文件列）"],
+    index=0,
+    key="autohome_source_option",
+    help="当汽车之家文件没有来源列或希望统一归为垂媒/汽车之家时，选择强制模式"
+)
+# ====== 新增结束 ======
+
 # 销售顾问选择
 st.sidebar.subheader("销售顾问分配")
 
@@ -637,8 +648,9 @@ def fair_allocate_consultants(records, selected_consultants_dict, first_consulta
     
     return records
 
-def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consultant):
-    """处理合并逻辑 - 新增排除规则"""
+# ====== 修改：process_merge 函数增加 autohome_source_option 参数 ======
+def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consultant, autohome_source_option):
+    """处理合并逻辑 - 新增排除规则，支持汽车之家来源强制模式"""
     results = []
     excluded_count = 0
     
@@ -697,15 +709,20 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             original_car_series = row.get('意向车系', '')
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="汽车之家")
             
-            # 来源信息
-            bmd_source = row.get('BMD二级渠道', '')
-            source_category = map_source_category(bmd_source)
-            source_detail = map_source_detail(bmd_source)
-            
-            # 检查是否需要排除（来源分类或线索来源为"排除"）
-            if source_category == "排除" or source_detail == "排除":
-                excluded_count += 1
-                continue
+            # ====== 根据选项处理来源 ======
+            if autohome_source_option == "强制设为垂媒/汽车之家（忽略原文件列）":
+                source_category = "垂媒"
+                source_detail = "汽车之家"
+                # 强制模式下不检查排除规则
+            else:
+                bmd_source = row.get('BMD二级渠道', '')
+                source_category = map_source_category(bmd_source)
+                source_detail = map_source_detail(bmd_source)
+                # 检查是否需要排除
+                if source_category == "排除" or source_detail == "排除":
+                    excluded_count += 1
+                    continue
+            # ====== 结束修改 ======
             
             results.append({
                 '姓名': name,
@@ -881,7 +898,9 @@ with tab2:
                     
                     # 处理合并
                     if df_yiche is not None or df_autohome is not None:
-                        df_result = process_merge(df_yiche, df_autohome, consultants, first_consultant)
+                        # ====== 传入 autohome_source_option ======
+                        df_result = process_merge(df_yiche, df_autohome, consultants, first_consultant, autohome_source_option)
+                        # ====== 结束修改 ======
                         
                         if df_result is not None:
                             # 保存到session state
@@ -1021,4 +1040,4 @@ with tab3:
 
 # 页脚
 st.markdown("---")
-st.caption("销售线索合并工具 v0.5.6 | 支持自定义映射规则和排除规则 | All by Eric & deepseek")
+st.caption("销售线索合并工具 v0.6.0 | 新增汽车之家来源强制匹配模式 | All by Eric & deepseek")
