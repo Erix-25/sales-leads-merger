@@ -651,7 +651,7 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="易车网")
             
             # 来源信息
-            source = row.get('商业产品来源', '')
+            source = row.get('BMD二级渠道', '')
             if pd.isna(source):
                 source = row.get('来源', '')
             
@@ -688,7 +688,7 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
                 continue
             
             # 标准化车系（使用新的列名：意向车系车型）
-            original_car_series = row.get('意向车系车型', '')
+            original_car_series = row.get('线索意向车型车系', '')
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="汽车之家")
             
             # 来源信息 - 固定为垂媒和汽车之家（不再从文件中读取）
