@@ -641,7 +641,7 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
         st.info(f"处理易车网数据: {len(df_yiche)} 条记录")
         for idx, row in df_yiche.iterrows():
             name = remove_after_slash(row.get('客户姓名', ''))
-            phone = remove_after_slash(row.get('客户号码', ''))
+            phone = remove_after_slash(row.get('客户手机', ''))
             
             if pd.isna(name) or pd.isna(phone) or name == '' or phone == '':
                 continue
