@@ -645,29 +645,37 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
     results = []
     excluded_count = 0
     
-    # 处理易车网数据（新格式）
+    # 处理易车网数据（适配新旧两种格式）
     if df_yiche is not None:
         st.info(f"处理易车网数据: {len(df_yiche)} 条记录")
+        # 可选：打印列名供调试
+        # st.write("易车网文件列名：", list(df_yiche.columns))
         for idx, row in df_yiche.iterrows():
             name = remove_after_slash(row.get('客户姓名', ''))
             phone = remove_after_slash(row.get('客户手机', ''))
-            
+        
             if pd.isna(name) or pd.isna(phone) or name == '' or phone == '':
                 continue
-            
-            # 车系：新文件列名为“车系”
-            original_car_series = row.get('车系', '')
+        
+            # 尝试多个可能的车系列名（适配新旧格式）
+            car_series_candidates = ['车系', '意向车系']
+            original_car_series = ''
+            for col in car_series_candidates:
+                val = row.get(col, '')
+                if pd.notna(val) and val != '':
+                    original_car_series = val
+                    break
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="易车网")
-            
-            # 来源信息：优先使用“二级渠道”，若为空则尝试“一级渠道”
+        
+            # 来源信息：优先使用“BMD二级渠道”（旧格式），若为空则尝试“二级渠道”（新格式）
             source = row.get('BMD二级渠道', '')
             if pd.isna(source) or source == '':
                 source = row.get('二级渠道', '')
-            
+        
             source_category = map_source_category(source)
             source_detail = map_source_detail(source)
-            
-            # 检查是否需要排除（来源分类或线索来源为"排除"）
+        
+            # 检查是否需要排除
             if source_category == "排除" or source_detail == "排除":
                 excluded_count += 1
                 continue
