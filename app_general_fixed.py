@@ -696,10 +696,16 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             if pd.isna(name) or pd.isna(phone) or name == '' or phone == '':
                 continue
             
-            # 标准化车系（使用新的列名：意向车系车型）
-            original_car_series = row.get('线索意向车系车型', '')
-            if pd.isna(source) or source == '':
-                source = row.get('意向车系车型', '')
+            # 尝试多个可能的车系列名
+            car_series_cols = ['意向车系车型', '意向车系', '车系', '线索意向车型车系']
+            original_car_series = ''
+            for col in car_series_cols:
+                val = row.get(col, '')
+                if pd.notna(val) and val != '':
+                    original_car_series = val
+                break
+            if original_car_series == '':
+                original_car_series = ''  # 最后为空，normalize函数会处理为默认值
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="汽车之家")
             
             # 来源信息 - 固定为垂媒和汽车之家（不再从文件中读取）
@@ -1022,4 +1028,4 @@ with tab3:
 
 # 页脚
 st.markdown("---")
-st.caption("销售线索合并工具 v0.6.2 | 支持自定义映射规则和排除规则 | All by Eric & deepseek")
+st.caption("销售线索合并工具 v0.6.3 | 支持自定义映射规则和排除规则 | All by Eric & deepseek")
