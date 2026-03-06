@@ -63,7 +63,7 @@ if 'car_series_mapping' not in st.session_state:
         {"原始模式": r".*世家.*", "目标车系": "至境世家", "是否启用": True},
         {"原始模式": r".*L7.*", "目标车系": "至境L7", "是否启用": True},
         {"原始模式": r".*昂科旗.*", "目标车系": "昂科威PLUS", "是否启用": True},
-        {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True},
+        {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True}
         {"原始模式": r".*E7.*", "目标车系": "至境E7", "是否启用": True},
     ]
 
@@ -282,7 +282,7 @@ with st.sidebar.expander("🗺️ 映射规则管理", expanded=False):
                     {"原始模式": r".*世家.*", "目标车系": "至境世家", "是否启用": True},
                     {"原始模式": r".*L7.*", "目标车系": "至境L7", "是否启用": True},
                     {"原始模式": r".*昂科旗.*", "目标车系": "昂科威PLUS", "是否启用": True},
-                    {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True},
+                    {"原始模式": r".*别克.*", "目标车系": "昂科威PLUS", "是否启用": True}
                     {"原始模式": r".*E7.*", "目标车系": "至境E7", "是否启用": True},
                 ]
                 st.success("已恢复默认车系映射规则！")
@@ -472,34 +472,14 @@ with st.sidebar.expander("👥 销售人员管理", expanded=False):
 # 4. 销售线索合并配置
 st.sidebar.subheader("2. 合并配置")
 
-# 文件上传部分（交换标签并修改类型）
+# 文件上传部分
 col1, col2 = st.sidebar.columns(2)
 
 with col1:
-    # 原“易车网文件”现在改为“汽车之家文件”，支持Excel/CSV
-    yiche_file = st.file_uploader(
-        "汽车之家文件 (Excel/CSV)",
-        type=['xlsx', 'xls', 'csv'],
-        key="yiche_file"
-    )
+    yiche_file = st.file_uploader("易车网文件", type=['xlsx', 'xls'], key="yiche_file")
     
 with col2:
-    # 原“汽车之家文件”现在改为“易车网文件”，仅支持CSV
-    autohome_file = st.file_uploader(
-        "易车网文件 (CSV)",
-        type=['csv'],
-        key="autohome_file"
-    )
-
-# 汽车之家来源处理选项
-st.sidebar.subheader("汽车之家来源处理")
-autohome_source_option = st.sidebar.radio(
-    "选择处理方式",
-    options=["使用映射规则（需有'BMD二级渠道'列）", "强制设为垂媒/汽车之家（忽略原文件列）"],
-    index=0,
-    key="autohome_source_option",
-    help="当汽车之家文件没有来源列或希望统一归为垂媒/汽车之家时，选择强制模式"
-)
+    autohome_file = st.file_uploader("汽车之家文件", type=['csv'], key="autohome_file")
 
 # 销售顾问选择
 st.sidebar.subheader("销售顾问分配")
@@ -531,7 +511,7 @@ else:
     st.sidebar.warning("请至少选择一个销售顾问")
     first_consultant = ""
 
-# 辅助函数
+# 复制原脚本的处理函数
 def remove_after_slash(value):
     """去除字符串中'/'之后的内容"""
     if pd.isna(value):
@@ -543,18 +523,20 @@ def remove_after_slash(value):
 
 def get_consultant_unit(consultant_name):
     """获取顾问所属单位"""
+    # 从设置中查找单位
     for consultant in st.session_state.consultant_settings:
         if consultant["姓名"] == consultant_name:
             return consultant["单位"]
     return ""
 
 def normalize_car_series(car_series, default_value="昂科威PLUS", original_source=None):
-    """标准化车系名称"""
+    """标准化车系名称 - 使用可配置的映射规则"""
     if pd.isna(car_series) or str(car_series).strip() == '':
         return default_value
     
     original = str(car_series).strip()
     
+    # 使用可配置的映射规则
     for mapping_rule in st.session_state.car_series_mapping:
         if mapping_rule["是否启用"]:
             pattern = mapping_rule["原始模式"]
@@ -562,141 +544,119 @@ def normalize_car_series(car_series, default_value="昂科威PLUS", original_sou
                 if re.search(pattern, original, re.IGNORECASE):
                     return mapping_rule["目标车系"]
             except re.error:
+                # 如果正则表达式无效，尝试字符串包含匹配
                 if pattern in original or original in pattern:
                     return mapping_rule["目标车系"]
     
     return default_value
 
 def map_source_category(source_value):
-    """映射来源分类"""
+    """映射来源分类 - 使用可配置的映射规则"""
     if pd.isna(source_value):
         return "其他"
+    
     source_str = str(source_value).strip()
     if not source_str:
         return "其他"
     
+    # 使用可配置的映射规则
     for mapping_rule in st.session_state.source_category_mapping:
         if mapping_rule["是否启用"]:
             original_source = mapping_rule["原始来源"]
+            # 精确匹配或模糊匹配
             if original_source == source_str or original_source in source_str or source_str in original_source:
                 target = mapping_rule["目标分类"]
+                # 如果目标分类为"排除"，返回特殊标记
                 if target == "排除":
                     return "排除"
                 return target
+    
     return "其他"
 
 def map_source_detail(source_value):
-    """映射线索来源"""
+    """映射线索来源 - 使用可配置的映射规则"""
     if pd.isna(source_value):
         return ""
+    
     source_str = str(source_value).strip()
     if not source_str:
         return ""
     
+    # 使用可配置的映射规则
     for mapping_rule in st.session_state.source_detail_mapping:
         if mapping_rule["是否启用"]:
             original_source = mapping_rule["原始来源"]
+            # 精确匹配或模糊匹配
             if original_source == source_str or original_source in source_str or source_str in original_source:
                 target = mapping_rule["目标线索来源"]
+                # 如果目标线索来源为"排除"，返回特殊标记
                 if target == "排除":
                     return "排除"
                 return target
+    
     return ""
 
 def fair_allocate_consultants(records, selected_consultants_dict, first_consultant=None):
     """公平分配销售顾问"""
+    # 获取选中的顾问列表
     available_consultants = [name for name, selected in selected_consultants_dict.items() if selected]
+    
     if not available_consultants:
         return records
     
+    # 初始化计数器
     consultant_counts = {consultant: 0 for consultant in available_consultants}
     
+    # 如果指定了第一条线索的顾问，调整队列
     if first_consultant and first_consultant in available_consultants:
         first_index = available_consultants.index(first_consultant)
         consultant_queue = available_consultants[first_index:] + available_consultants[:first_index]
     else:
         consultant_queue = available_consultants.copy()
     
+    # 为每条记录分配顾问
     for i, record in enumerate(records):
+        # 选择分配最少的顾问
         available_counts = {c: consultant_counts[c] for c in consultant_queue}
         min_count = min(available_counts.values())
         min_consultants = [c for c, count in available_counts.items() if count == min_count]
         
-        selected_consultant = consultant_queue[0]
+        # 选择在队列中位置靠前的
+        selected_consultant = consultant_queue[0]  # 默认选择第一个
         for consultant in consultant_queue:
             if consultant in min_consultants:
                 selected_consultant = consultant
                 break
         
+        # 更新分配数量
         consultant_counts[selected_consultant] += 1
+        
+        # 分配顾问和单位
         record['销售顾问'] = selected_consultant
         record['单位'] = get_consultant_unit(selected_consultant)
     
     return records
 
-# ====== 修改后的合并处理函数 ======
-def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consultant, autohome_source_option):
-    """处理合并逻辑，已交换两个数据源的处理"""
+def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consultant):
+    """处理合并逻辑 - 新增排除规则"""
     results = []
     excluded_count = 0
     
-    # 处理汽车之家数据（原yiche_file，现在实际是汽车之家文件）
+    # 处理易车网数据
     if df_yiche is not None:
-        st.info(f"处理汽车之家数据: {len(df_yiche)} 条记录")
+        st.info(f"处理易车网数据: {len(df_yiche)} 条记录")
         for idx, row in df_yiche.iterrows():
-            # 使用汽车之家新文件的列名
             name = remove_after_slash(row.get('客户姓名', ''))
             phone = remove_after_slash(row.get('客户号码', ''))
             
             if pd.isna(name) or pd.isna(phone) or name == '' or phone == '':
                 continue
             
-            # 意向车系
-            original_car_series = row.get('意向车系车型', '')
-            car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="汽车之家")
-            
-            # 来源处理：根据用户选项
-            if autohome_source_option == "强制设为垂媒/汽车之家（忽略原文件列）":
-                source_category = "垂媒"
-                source_detail = "汽车之家"
-                # 强制模式下不检查排除
-            else:
-                # 尝试获取可能的来源列（新文件可能没有，这里先用空值）
-                bmd_source = row.get('BMD二级渠道', '')  # 可能不存在
-                source_category = map_source_category(bmd_source)
-                source_detail = map_source_detail(bmd_source)
-                if source_category == "排除" or source_detail == "排除":
-                    excluded_count += 1
-                    continue
-            
-            results.append({
-                '姓名': name,
-                '手机号': phone,
-                '性别': '',
-                '来源分类': source_category,
-                '线索来源': source_detail,
-                '备注': '',
-                '意向品牌': '别克',
-                '意向车系': car_series,
-                '销售顾问': '',
-                '单位': '',
-                '跟进内容': ''
-            })
-    
-    # 处理易车网数据（原autohome_file，现在实际是易车网文件）
-    if df_autohome is not None:
-        st.info(f"处理易车网数据: {len(df_autohome)} 条记录")
-        for idx, row in df_autohome.iterrows():
-            # 使用易车网原有的列名
-            name = remove_after_slash(row.get('客户姓名', ''))
-            phone = remove_after_slash(row.get('客户号码', ''))
-            
-            if pd.isna(name) or pd.isna(phone) or name == '' or phone == '':
-                continue
-            
+            # 标准化车系
             original_car_series = row.get('线索意向车型车系', '')
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="易车网")
             
+            # 来源信息
             source = row.get('商业产品来源', '')
             if pd.isna(source):
                 source = row.get('来源', '')
@@ -704,6 +664,7 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             source_category = map_source_category(source)
             source_detail = map_source_detail(source)
             
+            # 检查是否需要排除（来源分类或线索来源为"排除"）
             if source_category == "排除" or source_detail == "排除":
                 excluded_count += 1
                 continue
@@ -722,6 +683,45 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
                 '跟进内容': ''
             })
     
+    # 处理汽车之家数据
+    if df_autohome is not None:
+        st.info(f"处理汽车之家数据: {len(df_autohome)} 条记录")
+        for idx, row in df_autohome.iterrows():
+            name = remove_after_slash(row.get('客户姓名', ''))
+            phone = remove_after_slash(row.get('客户手机', ''))
+            
+            if pd.isna(name) or pd.isna(phone) or name == '' or phone == '':
+                continue
+            
+            # 标准化车系
+            original_car_series = row.get('意向车系', '')
+            car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="汽车之家")
+            
+            # 来源信息
+            bmd_source = row.get('BMD二级渠道', '')
+            source_category = map_source_category(bmd_source)
+            source_detail = map_source_detail(bmd_source)
+            
+            # 检查是否需要排除（来源分类或线索来源为"排除"）
+            if source_category == "排除" or source_detail == "排除":
+                excluded_count += 1
+                continue
+            
+            results.append({
+                '姓名': name,
+                '手机号': phone,
+                '性别': '',
+                '来源分类': source_category,
+                '线索来源': source_detail,
+                '备注': '',
+                '意向品牌': '别克',
+                '意向车系': car_series,
+                '销售顾问': '',
+                '单位': '',
+                '跟进内容': ''
+            })
+    
+    # 合并结果
     if excluded_count > 0:
         add_log(f"排除了 {excluded_count} 条'经销商市场活动'线索")
     
@@ -735,22 +735,28 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
     before_dedup = len(df)
     df = df.drop_duplicates(subset=['手机号'], keep='first')
     after_dedup = len(df)
+    
     add_log(f"去重: {before_dedup} -> {after_dedup} 条记录")
     
-    # 修复空车系
+    # 检查并修复空车系
     empty_car_series_count = df['意向车系'].isna().sum() + (df['意向车系'] == '').sum()
     if empty_car_series_count > 0:
         df['意向车系'] = df['意向车系'].apply(lambda x: "昂科威PLUS" if pd.isna(x) or str(x).strip() == '' else x)
     
-    # 分配销售顾问
+    # 公平分配销售顾问
     records = df.to_dict('records')
     records = fair_allocate_consultants(records, selected_consultants_dict, first_consultant)
+    
+    # 转换回DataFrame
     df = pd.DataFrame(records)
     
+    # 确保数据列的顺序
     final_columns = [
         '姓名', '手机号', '性别', '来源分类', '线索来源', '备注',
         '意向品牌', '意向车系', '销售顾问', '单位', '跟进内容'
     ]
+    
+    # 确保DataFrame只包含我们需要的列
     df = df[final_columns]
     
     return df
@@ -764,63 +770,54 @@ with tab1:
     col1, col2 = st.columns(2)
     
     with col1:
-        # 对应汽车之家文件（原yiche_file）
-        st.subheader("汽车之家文件")
+        st.subheader("易车网文件")
         if yiche_file:
             try:
-                # 先尝试作为Excel读取
                 df_yiche = pd.read_excel(yiche_file)
-                st.success(f"✅ 成功读取汽车之家文件，共 {len(df_yiche)} 条记录")
+                st.success(f"✅ 成功读取易车网文件，共 {len(df_yiche)} 条记录")
                 st.dataframe(df_yiche.head(), use_container_width=True)
+                
+                # 显示列名
                 with st.expander("查看文件列名"):
                     st.write("列名列表:", list(df_yiche.columns))
             except Exception as e:
-                try:
-                    # 如果失败，尝试作为CSV读取（多种编码）
-                    content = yiche_file.getvalue()
-                    try:
-                        content_str = content.decode('utf-8-sig')
-                    except:
-                        try:
-                            content_str = content.decode('gbk')
-                        except:
-                            content_str = content.decode('utf-8', errors='ignore')
-                    df_yiche = pd.read_csv(io.StringIO(content_str))
-                    st.success(f"✅ 成功读取汽车之家文件（CSV格式），共 {len(df_yiche)} 条记录")
-                    st.dataframe(df_yiche.head(), use_container_width=True)
-                    with st.expander("查看文件列名"):
-                        st.write("列名列表:", list(df_yiche.columns))
-                except Exception as e2:
-                    st.error(f"读取失败: {e2}")
+                st.error(f"读取失败: {str(e)}")
         else:
-            st.info("请上传汽车之家Excel或CSV文件")
+            st.info("请上传易车网Excel文件")
     
     with col2:
-        # 对应易车网文件（原autohome_file）
-        st.subheader("易车网文件")
+        st.subheader("汽车之家文件")
         if autohome_file:
             try:
-                # 尝试多种编码读取CSV
+                # 尝试多种编码读取
                 try:
                     df_autohome = pd.read_csv(autohome_file, encoding='utf-8')
                 except:
                     try:
                         df_autohome = pd.read_csv(autohome_file, encoding='gbk')
                     except:
+                        # 如果都不行，尝试读取原始字节并手动处理
                         content = autohome_file.getvalue()
                         try:
                             content_str = content.decode('utf-8-sig')
                         except:
                             content_str = content.decode('utf-8', errors='ignore')
+                        
+                        # 使用StringIO包装
                         df_autohome = pd.read_csv(io.StringIO(content_str))
-                st.success(f"✅ 成功读取易车网文件，共 {len(df_autohome)} 条记录")
+                
+                st.success(f"✅ 成功读取汽车之家文件，共 {len(df_autohome)} 条记录")
                 st.dataframe(df_autohome.head(), use_container_width=True)
+                
+                # 显示列名
                 with st.expander("查看文件列名"):
                     st.write("列名列表:", list(df_autohome.columns))
+                    
             except Exception as e:
                 st.error(f"读取失败: {str(e)}")
+                st.info("建议先使用左侧的'文件格式修复'功能处理此文件")
         else:
-            st.info("请上传易车网CSV文件")
+            st.info("请上传汽车之家CSV文件")
     
     # 显示修复后的数据（如果存在）
     if st.session_state.fixed_autohome_df is not None:
@@ -831,24 +828,30 @@ with tab1:
 with tab2:
     st.header("数据处理")
     
+    # 显示当前映射规则统计
     with st.expander("查看当前映射规则统计", expanded=False):
         col1, col2, col3 = st.columns(3)
+        
         with col1:
             enabled_car = sum(1 for rule in st.session_state.car_series_mapping if rule["是否启用"])
             total_car = len(st.session_state.car_series_mapping)
             st.metric("车系映射规则", f"{enabled_car}/{total_car} 条启用")
+        
         with col2:
             enabled_category = sum(1 for rule in st.session_state.source_category_mapping if rule["是否启用"])
             total_category = len(st.session_state.source_category_mapping)
             st.metric("来源分类规则", f"{enabled_category}/{total_category} 条启用")
+        
         with col3:
             enabled_detail = sum(1 for rule in st.session_state.source_detail_mapping if rule["是否启用"])
             total_detail = len(st.session_state.source_detail_mapping)
             st.metric("线索来源规则", f"{enabled_detail}/{total_detail} 条启用")
     
+    # 检查是否有选中的销售顾问
     if not selected_consultants:
         st.warning("⚠️ 请先在侧边栏选择至少一个销售顾问")
     
+    # 检查是否上传了文件
     files_available = (yiche_file is not None) or (autohome_file is not None) or (st.session_state.fixed_autohome_df is not None)
     
     if files_available and selected_consultants:
@@ -856,63 +859,49 @@ with tab2:
             with st.spinner("正在处理数据..."):
                 try:
                     # 读取数据
-                    df_yiche_data = None
-                    df_autohome_data = None
+                    df_yiche = None
+                    df_autohome = None
                     
                     if yiche_file:
-                        # 汽车之家文件：先尝试Excel，再尝试CSV
-                        try:
-                            df_yiche_data = pd.read_excel(yiche_file)
-                        except:
-                            try:
-                                content = yiche_file.getvalue()
-                                try:
-                                    content_str = content.decode('utf-8-sig')
-                                except:
-                                    try:
-                                        content_str = content.decode('gbk')
-                                    except:
-                                        content_str = content.decode('utf-8', errors='ignore')
-                                df_yiche_data = pd.read_csv(io.StringIO(content_str))
-                            except Exception as e:
-                                st.error(f"读取汽车之家文件失败: {e}")
-                                df_yiche_data = None
+                        df_yiche = pd.read_excel(yiche_file)
                     
-                    if autohome_file:
-                        # 易车网文件：CSV
+                    # 优先使用修复后的数据
+                    if st.session_state.fixed_autohome_df is not None:
+                        df_autohome = st.session_state.fixed_autohome_df
+                    elif autohome_file:
                         try:
-                            df_autohome_data = pd.read_csv(autohome_file, encoding='utf-8')
+                            df_autohome = pd.read_csv(autohome_file, encoding='utf-8')
                         except:
                             try:
-                                df_autohome_data = pd.read_csv(autohome_file, encoding='gbk')
+                                df_autohome = pd.read_csv(autohome_file, encoding='gbk')
                             except:
                                 content = autohome_file.getvalue()
-                                try:
-                                    content_str = content.decode('utf-8-sig')
-                                except:
-                                    content_str = content.decode('utf-8', errors='ignore')
-                                df_autohome_data = pd.read_csv(io.StringIO(content_str))
+                                content_str = content.decode('utf-8', errors='ignore')
+                                df_autohome = pd.read_csv(io.StringIO(content_str))
                     
-                    # 优先使用修复后的数据（如有）
-                    if st.session_state.fixed_autohome_df is not None:
-                        # 修复后的数据视为汽车之家数据
-                        df_yiche_data = st.session_state.fixed_autohome_df
-                    
-                    if df_yiche_data is not None or df_autohome_data is not None:
-                        df_result = process_merge(df_yiche_data, df_autohome_data, consultants, first_consultant, autohome_source_option)
+                    # 处理合并
+                    if df_yiche is not None or df_autohome is not None:
+                        df_result = process_merge(df_yiche, df_autohome, consultants, first_consultant)
                         
                         if df_result is not None:
+                            # 保存到session state
                             st.session_state.df_merged = df_result
+                            
+                            # 显示处理日志
                             st.success(f"✅ 数据处理完成！共合并 {len(df_result)} 条记录")
                             
+                            # 显示分配统计
                             st.subheader("销售顾问分配统计")
                             allocation_counts = {}
                             for consultant in selected_consultants:
                                 count = len(df_result[df_result['销售顾问'] == consultant])
                                 allocation_counts[consultant] = count
+                                
+                                # 获取单位
                                 unit = get_consultant_unit(consultant)
                                 st.write(f"**{consultant}** ({unit}): {count}条")
                             
+                            # 检查分配均匀度
                             counts = list(allocation_counts.values())
                             if counts:
                                 max_count = max(counts)
@@ -926,6 +915,7 @@ with tab2:
                         
                 except Exception as e:
                     st.error(f"处理失败: {str(e)}")
+                    st.info("错误详情:")
                     st.code(str(e))
     else:
         st.info("请先上传需要处理的文件，并确保已选择至少一个销售顾问")
@@ -936,17 +926,26 @@ with tab3:
     if st.session_state.df_merged is not None:
         df = st.session_state.df_merged
         
+        # 显示数据预览
         st.subheader("📋 数据预览")
         st.dataframe(df.head(20), use_container_width=True)
         
+        # 显示统计信息
         col1, col2 = st.columns(2)
+        
         with col1:
             st.subheader("📊 基本统计")
             st.metric("总记录数", len(df))
+            
+            # 车系统计
             car_stats = df['意向车系'].value_counts()
             st.metric("车型种类", len(car_stats))
+            
+            # 来源统计
             source_stats = df['线索来源'].value_counts()
             st.metric("来源渠道", len(source_stats))
+            
+            # 显示车系统计详情
             with st.expander("查看车系统计详情"):
                 for car, count in car_stats.items():
                     st.write(f"{car}: {count}条")
@@ -956,35 +955,46 @@ with tab3:
             if not df['意向车系'].empty:
                 car_stats = df['意向车系'].value_counts()
                 st.bar_chart(car_stats)
+            
+            # 显示前5大车型
             st.subheader("🏆 前5大车型")
             top5 = car_stats.head(5)
             for i, (car, count) in enumerate(top5.items(), 1):
                 percentage = (count / len(df)) * 100
                 st.write(f"{i}. {car}: {count}条 ({percentage:.1f}%)")
         
+        # 显示线索来源统计
         st.subheader("📈 线索来源统计")
         col3, col4 = st.columns(2)
+        
         with col3:
             if not df['线索来源'].empty:
                 source_stats = df['线索来源'].value_counts()
                 st.bar_chart(source_stats)
+        
         with col4:
             with st.expander("查看来源统计详情"):
                 for source, count in source_stats.items():
                     st.write(f"{source}: {count}条")
         
+        # 显示销售顾问统计
         st.subheader("👥 销售顾问统计")
         consultant_stats = df['销售顾问'].value_counts()
         col5, col6 = st.columns(2)
+        
         with col5:
             st.bar_chart(consultant_stats)
+        
         with col6:
             with st.expander("查看销售顾问统计详情"):
                 for consultant, count in consultant_stats.items():
                     unit = df[df['销售顾问'] == consultant]['单位'].iloc[0] if len(df[df['销售顾问'] == consultant]) > 0 else ""
                     st.write(f"{consultant} ({unit}): {count}条")
         
+        # 提供下载
         st.subheader("💾 下载结果")
+        
+        # 转换为Excel
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='合并结果')
@@ -998,6 +1008,7 @@ with tab3:
             type="primary"
         )
         
+        # 提供CSV格式下载
         csv_output = df.to_csv(index=False, encoding='utf-8-sig')
         st.download_button(
             label="📄 下载CSV文件",
@@ -1010,4 +1021,4 @@ with tab3:
 
 # 页脚
 st.markdown("---")
-st.caption("销售线索合并工具 v0.6.1 | 已交换文件来源标签，适配汽车之家新格式 | 请根据需要选择强制模式")
+st.caption("销售线索合并工具 v0.5.6 | 支持自定义映射规则和排除规则 | All by Eric & deepseek")
