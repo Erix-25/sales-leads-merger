@@ -91,6 +91,7 @@ if 'source_category_mapping' not in st.session_state:
         {"原始来源": "本地", "目标分类": "自媒", "是否启用": True},
         {"原始来源": "官方", "目标分类": "主机厂下发", "是否启用": True},
         {"原始来源": "别克", "目标分类": "主机厂下发", "是否启用": True},
+        {"原始来源": "基地", "目标分类": "主机厂下发", "是否启用": True},  # 新增映射
     ]
 
 if 'source_detail_mapping' not in st.session_state:
@@ -332,6 +333,7 @@ with st.sidebar.expander("🗺️ 映射规则管理", expanded=False):
                     {"原始来源": "本地", "目标分类": "自媒", "是否启用": True},
                     {"原始来源": "官方", "目标分类": "主机厂下发", "是否启用": True},
                     {"原始来源": "别克", "目标分类": "主机厂下发", "是否启用": True},
+                    {"原始来源": "基地", "目标分类": "主机厂下发", "是否启用": True},
                 ]
                 st.success("已恢复默认来源分类映射规则！")
     
@@ -505,14 +507,21 @@ else:
     st.sidebar.warning("请至少选择一个销售顾问")
     first_consultant = ""
 
-# 复制原脚本的处理函数
+# 增强的去除分隔符函数（支持 '/' 和 '+'）
 def remove_after_slash(value):
-    """去除字符串中'/'之后的内容"""
+    """去除字符串中 '/' 或 '+' 之后的内容"""
     if pd.isna(value):
         return ""
     value_str = str(value).strip()
-    if '/' in value_str:
-        return value_str.split('/')[0].strip()
+    # 查找第一个 '/' 或 '+'
+    sep_pos = -1
+    for sep in ['/', '+']:
+        pos = value_str.find(sep)
+        if pos != -1:
+            sep_pos = pos
+            break
+    if sep_pos != -1:
+        return value_str[:sep_pos].strip()
     return value_str
 
 def get_consultant_unit(consultant_name):
@@ -636,7 +645,7 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
     results = []
     excluded_count = 0
     
-    # 处理易车网数据
+    # 处理易车网数据（新格式）
     if df_yiche is not None:
         st.info(f"处理易车网数据: {len(df_yiche)} 条记录")
         for idx, row in df_yiche.iterrows():
@@ -646,14 +655,14 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             if pd.isna(name) or pd.isna(phone) or name == '' or phone == '':
                 continue
             
-            # 标准化车系
-            original_car_series = row.get('意向车系', '')
+            # 车系：新文件列名为“车系”
+            original_car_series = row.get('车系', '')
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="易车网")
             
-            # 来源信息
-            source = row.get('BMD二级渠道', '')
-            if pd.isna(source):
-                source = row.get('来源', '')
+            # 来源信息：优先使用“二级渠道”，若为空则尝试“一级渠道”
+            source = row.get('二级渠道', '')
+            if pd.isna(source) or source == '':
+                source = row.get('一级渠道', '')
             
             source_category = map_source_category(source)
             source_detail = map_source_detail(source)
@@ -688,7 +697,7 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
                 continue
             
             # 标准化车系（使用新的列名：意向车系车型）
-            original_car_series = row.get('线索意向车型车系', '')
+            original_car_series = row.get('意向车系车型', '')
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="汽车之家")
             
             # 来源信息 - 固定为垂媒和汽车之家（不再从文件中读取）
@@ -1011,4 +1020,4 @@ with tab3:
 
 # 页脚
 st.markdown("---")
-st.caption("销售线索合并工具 v0.5.8 | 支持自定义映射规则和排除规则 | All by Eric & deepseek")
+st.caption("销售线索合并工具 v0.6.2 | 支持自定义映射规则和排除规则 | All by Eric & deepseek")
