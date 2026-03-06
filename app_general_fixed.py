@@ -689,6 +689,33 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
     # 处理汽车之家数据
     if df_autohome is not None:
         st.info(f"处理汽车之家数据: {len(df_autohome)} 条记录")
+
+        # 获取实际列名（去除两端空格）
+        actual_cols = [str(col).strip() for col in df_autohome.columns]
+
+        # 候选列名（去除空格后）
+        candidates = ['意向车系车型', '意向车系', '车系', '线索意向车型车系', '车型']
+        # 构建实际列名到候选的映射（忽略空格）
+        col_map = {}
+        for actual in actual_cols:
+            actual_clean = actual.replace(' ', '')
+            for cand in candidates:
+                if cand.replace(' ', '') == actual_clean:
+                    col_map[actual] = cand
+                    break
+    
+        # 选择第一个匹配的列名，如果没有则使用第一个候选（但实际可能不存在）
+        target_col = None
+        for actual in actual_cols:
+            if actual in col_map:
+                target_col = actual
+                break
+    
+        if target_col is None:
+            st.warning("未找到车系列名，将使用默认值 '昂科威PLUS'")
+        else:
+            st.info(f"使用列名: '{target_col}' 作为车系来源")
+
         for idx, row in df_autohome.iterrows():
             name = remove_after_slash(row.get('客户姓名', ''))
             phone = remove_after_slash(row.get('客户号码', ''))
@@ -696,16 +723,12 @@ def process_merge(df_yiche, df_autohome, selected_consultants_dict, first_consul
             if pd.isna(name) or pd.isna(phone) or name == '' or phone == '':
                 continue
             
-            # 尝试多个可能的车系列名
-            car_series_cols = ['意向车系车型', '意向车系', '车系', '线索意向车型车系']
-            original_car_series = ''
-            for col in car_series_cols:
-                val = row.get(col, '')
-                if pd.notna(val) and val != '':
-                    original_car_series = val
-                break
-            if original_car_series == '':
-                original_car_series = ''  # 最后为空，normalize函数会处理为默认值
+            # 获取车系
+            if target_col:
+                original_car_series = row.get(target_col, '')
+            else:
+                original_car_series = ''
+        
             car_series = normalize_car_series(original_car_series, default_value="昂科威PLUS", original_source="汽车之家")
             
             # 来源信息 - 固定为垂媒和汽车之家（不再从文件中读取）
