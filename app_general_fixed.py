@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import random
 import re
 import io
 import json
@@ -600,43 +601,44 @@ def map_source_detail(source_value):
     return ""
 
 def fair_allocate_consultants(records, selected_consultants_dict, first_consultant=None):
-    """公平分配销售顾问"""
-    # 获取选中的顾问列表
+    """公平分配销售顾问，剩余线索随机分配"""
     available_consultants = [name for name, selected in selected_consultants_dict.items() if selected]
-    
     if not available_consultants:
         return records
     
-    # 初始化计数器
-    consultant_counts = {consultant: 0 for consultant in available_consultants}
+    n = len(records)
+    m = len(available_consultants)
     
-    # 如果指定了第一条线索的顾问，调整队列
+    # 确定顾问队列顺序（考虑 first_consultant）
     if first_consultant and first_consultant in available_consultants:
         first_index = available_consultants.index(first_consultant)
         consultant_queue = available_consultants[first_index:] + available_consultants[:first_index]
     else:
         consultant_queue = available_consultants.copy()
     
-    # 为每条记录分配顾问
-    for i, record in enumerate(records):
-        # 选择分配最少的顾问
-        available_counts = {c: consultant_counts[c] for c in consultant_queue}
-        min_count = min(available_counts.values())
-        min_consultants = [c for c, count in available_counts.items() if count == min_count]
-        
-        # 选择在队列中位置靠前的
-        selected_consultant = consultant_queue[0]  # 默认选择第一个
-        for consultant in consultant_queue:
-            if consultant in min_consultants:
-                selected_consultant = consultant
-                break
-        
-        # 更新分配数量
-        consultant_counts[selected_consultant] += 1
-        
-        # 分配顾问和单位
-        record['销售顾问'] = selected_consultant
-        record['单位'] = get_consultant_unit(selected_consultant)
+    # 基础轮询数量
+    base_per_consultant = n // m
+    remainder = n % m
+    
+    # 初始化计数器（仅用于记录，不影响分配）
+    consultant_counts = {c: 0 for c in available_consultants}
+    
+    # 分配基础部分（轮询）
+    for i in range(base_per_consultant * m):
+        consultant = consultant_queue[i % m]
+        records[i]['销售顾问'] = consultant
+        records[i]['单位'] = get_consultant_unit(consultant)
+        consultant_counts[consultant] += 1
+    
+    # 分配剩余部分（随机选取 remainder 个不同的顾问）
+    if remainder > 0:
+        remaining_consultants = random.sample(consultant_queue, remainder)
+        for i in range(remainder):
+            idx = base_per_consultant * m + i
+            consultant = remaining_consultants[i]
+            records[idx]['销售顾问'] = consultant
+            records[idx]['单位'] = get_consultant_unit(consultant)
+            consultant_counts[consultant] += 1
     
     return records
 
